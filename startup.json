@@ -33,5 +33,12 @@
     "description": "Connect small shops with nearby customers for delivery",
     "category": "E-commerce",
     "status": "idea"
+  },
+  {
+    "title": "AI Resume Builder",
+    "description": "Automatically creates CVs",
+    "category": "AI",
+    "status": "idea",
+    "id": 6
   }
 ]
