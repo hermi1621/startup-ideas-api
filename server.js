@@ -1,19 +1,35 @@
 const http = require('http');
-const ideas = require('./data/ideas.json');
 const fs = require('fs');
 const path = require('path');
 
-const server = http.createServer((req, res) => {
+const PORT = 3000;
+
+const filePath = path.join(__dirname, 'startup.json');
+
+const server = http.createServer(async (req, res) => {
 
     // GET all ideas
     if (req.url === '/api/ideas' && req.method === 'GET') {
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify(ideas));
+        try {
+            const data = await fs.promises.readFile(filePath, 'utf-8');
+            const ideas = JSON.parse(data);
+
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify(ideas));
+        } catch (error) {
+            res.writeHead(500, { 'Content-Type': 'text/plain' });
+            res.end('Error reading file');
+        }
+    }
 
     // GET single idea
-    } else if (req.url.startsWith('/api/ideas/') && req.method === 'GET') {
-        const ideaId = req.url.split('/')[3];
-        const idea = ideas.find(i => i.id === parseInt(ideaId));
+    else if (req.url.startsWith('/api/ideas/') && req.method === 'GET') {
+        const id = parseInt(req.url.split('/')[3]);
+
+        const data = await fs.promises.readFile(filePath, 'utf-8');
+        const ideas = JSON.parse(data);
+
+        const idea = ideas.find(i => i.id === id);
 
         if (idea) {
             res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -22,9 +38,10 @@ const server = http.createServer((req, res) => {
             res.writeHead(404, { 'Content-Type': 'text/plain' });
             res.end('Idea Not Found');
         }
+    }
 
     // POST create idea
-    } else if (req.url === '/api/ideas' && req.method === 'POST') {
+    else if (req.url === '/api/ideas' && req.method === 'POST') {
         let body = '';
 
         req.on('data', chunk => {
@@ -33,14 +50,24 @@ const server = http.createServer((req, res) => {
 
         req.on('end', async () => {
             const newIdea = JSON.parse(body);
-            const savedIdea = await addIdea(newIdea);
+
+            const data = await fs.promises.readFile(filePath, 'utf-8');
+            const ideas = JSON.parse(data);
+
+            const newId = ideas.length > 0 ? ideas[ideas.length - 1].id + 1 : 1;
+            newIdea.id = newId;
+
+            ideas.push(newIdea);
+
+            await fs.promises.writeFile(filePath, JSON.stringify(ideas, null, 2));
 
             res.writeHead(201, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify(savedIdea));
+            res.end(JSON.stringify(newIdea));
         });
+    }
 
     // PUT update idea
-    } else if (req.url.startsWith('/api/ideas/') && req.method === 'PUT') {
+    else if (req.url.startsWith('/api/ideas/') && req.method === 'PUT') {
         let body = '';
 
         req.on('data', chunk => {
@@ -48,90 +75,57 @@ const server = http.createServer((req, res) => {
         });
 
         req.on('end', async () => {
-            const ideaId = parseInt(req.url.split('/')[3]);
+            const id = parseInt(req.url.split('/')[3]);
             const updatedData = JSON.parse(body);
 
-            updatedData.id = ideaId;
+            const data = await fs.promises.readFile(filePath, 'utf-8');
+            let ideas = JSON.parse(data);
 
-            const updatedIdea = await updateIdea(updatedData);
+            const index = ideas.findIndex(i => i.id === id);
 
-            res.writeHead(200, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify(updatedIdea));
+            if (index !== -1) {
+                ideas[index] = { ...ideas[index], ...updatedData, id };
+
+                await fs.promises.writeFile(filePath, JSON.stringify(ideas, null, 2));
+
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify(ideas[index]));
+            } else {
+                res.writeHead(404, { 'Content-Type': 'text/plain' });
+                res.end('Idea Not Found');
+            }
         });
+    }
 
     // DELETE idea
-    } else if (req.url.startsWith('/api/ideas/') && req.method === 'DELETE') {
-        const ideaId = parseInt(req.url.split('/')[3]);
-        const deletedIdea = await deleteIdea(ideaId);
+    else if (req.url.startsWith('/api/ideas/') && req.method === 'DELETE') {
+        const id = parseInt(req.url.split('/')[3]);
 
-        if (deletedIdea) {
+        const data = await fs.promises.readFile(filePath, 'utf-8');
+        let ideas = JSON.parse(data);
+
+        const index = ideas.findIndex(i => i.id === id);
+
+        if (index !== -1) {
+            const deleted = ideas.splice(index, 1)[0];
+
+            await fs.promises.writeFile(filePath, JSON.stringify(ideas, null, 2));
+
             res.writeHead(200, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify(deletedIdea));
+            res.end(JSON.stringify(deleted));
         } else {
             res.writeHead(404, { 'Content-Type': 'text/plain' });
             res.end('Idea Not Found');
         }
+    }
 
-    } else {
+    // Fallback route
+    else {
         res.writeHead(404, { 'Content-Type': 'text/plain' });
         res.end('Not Found');
     }
 });
 
-
-// ➕ ADD IDEA
-const addIdea = async (idea) => {
-    const filePath = path.join(__dirname, 'data', 'ideas.json');
-    const data = await fs.promises.readFile(filePath, 'utf-8');
-    const ideas = JSON.parse(data);
-
-    const newId = ideas.length > 0 ? ideas[ideas.length - 1].id + 1 : 1;
-    idea.id = newId;
-
-    ideas.push(idea);
-
-    await fs.promises.writeFile(filePath, JSON.stringify(ideas, null, 2));
-
-    return idea;
-};
-
-
-// ✏️ UPDATE IDEA
-const updateIdea = async (idea) => {
-    const filePath = path.join(__dirname, 'data', 'ideas.json');
-    const data = await fs.promises.readFile(filePath, 'utf-8');
-    const ideas = JSON.parse(data);
-
-    const index = ideas.findIndex(i => i.id === idea.id);
-
-    if (index !== -1) {
-        ideas[index] = idea;
-        await fs.promises.writeFile(filePath, JSON.stringify(ideas, null, 2));
-    }
-
-    return idea;
-};
-
-
-// ❌ DELETE IDEA
-const deleteIdea = async (id) => {
-    const filePath = path.join(__dirname, 'data', 'ideas.json');
-    const data = await fs.promises.readFile(filePath, 'utf-8');
-    let ideas = JSON.parse(data);
-
-    const index = ideas.findIndex(i => i.id === id);
-
-    if (index !== -1) {
-        const deleted = ideas.splice(index, 1)[0];
-        await fs.promises.writeFile(filePath, JSON.stringify(ideas, null, 2));
-        return deleted;
-    }
-
-    return null;
-};
-
-
-const PORT = 3000;
 server.listen(PORT, () => {
-    console.log(`Startup Ideas API running on port ${PORT}`);
+    console.log(`Startup Ideas API running on http://localhost:${PORT}`);
 });
