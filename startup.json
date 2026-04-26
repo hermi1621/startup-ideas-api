@@ -35,10 +35,10 @@
     "status": "idea"
   },
   {
-    "title": "AI Resume Builder",
-    "description": "Automatically creates CVs",
+    "title": "AI Resume Builder Updated",
+    "description": "Now includes smart suggestions",
     "category": "AI",
-    "status": "idea",
+    "status": "completed",
     "id": 6
   }
 ]
