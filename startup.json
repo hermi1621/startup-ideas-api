@@ -1,0 +1,37 @@
+[
+  {
+    "id": 1,
+    "title": "AI Voice to Script App",
+    "description": "Convert spoken voice into movie scripts automatically",
+    "category": "AI",
+    "status": "idea"
+  },
+  {
+    "id": 2,
+    "title": "Smart Farming System",
+    "description": "Use sensors to monitor crops and automate irrigation",
+    "category": "Agriculture",
+    "status": "idea"
+  },
+  {
+    "id": 3,
+    "title": "Plastic Cleaning Robot Fish",
+    "description": "Robot that collects plastic waste from rivers",
+    "category": "Environment",
+    "status": "prototype"
+  },
+  {
+    "id": 4,
+    "title": "Student Study Planner App",
+    "description": "Helps students organize study schedules and track progress",
+    "category": "Education",
+    "status": "building"
+  },
+  {
+    "id": 5,
+    "title": "Local Delivery App",
+    "description": "Connect small shops with nearby customers for delivery",
+    "category": "E-commerce",
+    "status": "idea"
+  }
+]
