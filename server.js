@@ -8,7 +8,7 @@ const filePath = path.join(__dirname, 'startup.json');
 
 const server = http.createServer(async (req, res) => {
 
-    // GET all ideas
+    // GET 
     if (req.url === '/api/ideas' && req.method === 'GET') {
         try {
             const data = await fs.promises.readFile(filePath, 'utf-8');
@@ -22,7 +22,7 @@ const server = http.createServer(async (req, res) => {
         }
     }
 
-    // GET single idea
+    // GET single 
     else if (req.url.startsWith('/api/ideas/') && req.method === 'GET') {
         const id = parseInt(req.url.split('/')[3]);
 
@@ -40,7 +40,7 @@ const server = http.createServer(async (req, res) => {
         }
     }
 
-    // POST create idea
+    // POST 
     else if (req.url === '/api/ideas' && req.method === 'POST') {
         let body = '';
 
@@ -66,7 +66,7 @@ const server = http.createServer(async (req, res) => {
         });
     }
 
-    // PUT update idea
+    // PUT 
     else if (req.url.startsWith('/api/ideas/') && req.method === 'PUT') {
         let body = '';
 
@@ -97,7 +97,7 @@ const server = http.createServer(async (req, res) => {
         });
     }
 
-    // DELETE idea
+    // DELETE 
     else if (req.url.startsWith('/api/ideas/') && req.method === 'DELETE') {
         const id = parseInt(req.url.split('/')[3]);
 
@@ -119,7 +119,7 @@ const server = http.createServer(async (req, res) => {
         }
     }
 
-    // Fallback route
+    // Fallback 
     else {
         res.writeHead(404, { 'Content-Type': 'text/plain' });
         res.end('Not Found');
